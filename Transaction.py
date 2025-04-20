@@ -1,13 +1,28 @@
 from datetime import datetime, date
 import json
+import uuid
 
 class Transaction:
-    def __init__(self,  nom: str, montant: float, date_de_transaction: str = None,
-                categorie: str = None):
+    def __init__(self,  personne_id: str, nom: str, montant: float, date_de_transaction: str = None,
+                categorie: str = None ):
+                
+        if not personne_id:
+            raise ValueError("L'id d'une personne est obligatoire dans chaque transaction")
+
+        self.id = str(uuid.uuid4())
         self.nom = nom
         self.date_de_transaction = date_de_transaction
         self.montant = montant
         self.categorie = categorie
+        self.personne_id = personne_id
+
+    @property
+    def id(self) -> str:
+        return self._id
+    
+    @id.setter
+    def id(self, valeur: str):
+        self._id = valeur
 
     @property
     def date_de_transaction(self) -> datetime | None:
@@ -63,13 +78,14 @@ class Transaction:
 
 
     def __str__(self):
-        return f"Date:{self._date_de_transaction} - Libellé:{self._nom} - Catégorie:{self._categorie} - {self._montant:.2f}€"
+        return f"Date:{self._date_de_transaction} | Libellé:{self._nom} | Catégorie:{self._categorie} | {self._montant:.2f}€"
 
     def __repr__(self):
             return f"{self.date} | {self.nom} | {self.categorie} | {self.montant:.2f}€"
 
+    # Ajouter 'id' dès le début
     def convertir_l_objet_en_dico(self) -> dict:
-        dico = {}
+        dico = { 'id': self.id}
         for cle, valeur in self.__dict__.items():
             if isinstance(valeur, date):
                 dico[cle] = valeur.strftime('%Y-%m-%d')
@@ -77,14 +93,23 @@ class Transaction:
                 dico[cle] = valeur
         return dico
     
+   
+    # personne_id : obligatoire dans le dictionnaire
     @classmethod
     def convertir_du_dico_en_objet(self, dico:dict):
-        return self(
+        if 'personne_id' not in dico:
+            raise ValueError("'personne_id' est obbligatoire dans le dictionnaire")
+
+        objet = self(
             nom = dico.get('_nom'),
             montant = dico.get('_montant'),
             date_de_transaction = dico.get('_date_de_transaction'),
-            categorie = dico.get('_categorie')
+            categorie = dico.get('_categorie'),
+            personne_id = dico.get('personne_id')
         )
+        # objet.id : Récupérer 'id' ou en créer un 'id'
+        objet.id = dico.get('id', str(uuid.uuid4()))
+        return objet
     
     @classmethod
     def sauvegarder_en_json(self, emplacement_fichier: str,
@@ -128,15 +153,4 @@ class Transaction:
             for depense in depense_liste:
                 fichier.write(depense.convertir_l_objet_en_ligne() + '\n')
 
-'''
-t1 = Transaction( "Loyer", -1000.0, "2025-04-03" )
-t2 = Transaction( "Electricité", -220.0, date_de_transaction="2025-04-03" )
-t3 = Transaction( "Diésel", -80.00, "2025-04-04", categorie="Carburant")
-del t3.date_de_transaction
-del t3.categorie
-
-print(t1)
-print(t2)
-print(t3)
-'''
 
