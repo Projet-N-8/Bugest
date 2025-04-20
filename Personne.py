@@ -15,10 +15,6 @@ class Personne:
     def id(self) -> str:
         return self._id
     
-    @id.setter
-    def id(self, valeur: str):
-        self._id = valeur
-
     def ajouter_transaction(self, transaction: Transaction):
         self.transaction_liste.append(transaction)
 

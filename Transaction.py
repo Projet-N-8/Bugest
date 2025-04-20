@@ -14,15 +14,22 @@ class Transaction:
         self.date_de_transaction = date_de_transaction
         self.montant = montant
         self.categorie = categorie
-        self.personne_id = personne_id
+        self._personne_id = personne_id
 
     @property
     def id(self) -> str:
         return self._id
     
+    # Nécessaire pour importer des objets à partir de JSON
     @id.setter
     def id(self, valeur: str):
         self._id = valeur
+
+    @property
+    def personne_id(self) -> str:
+        return self._personne_id
+    
+
 
     @property
     def date_de_transaction(self) -> datetime | None:
@@ -85,15 +92,17 @@ class Transaction:
 
     # Ajouter 'id' dès le début
     def convertir_l_objet_en_dico(self) -> dict:
-        dico = { 'id': self.id}
-        for cle, valeur in self.__dict__.items():
-            if isinstance(valeur, date):
-                dico[cle] = valeur.strftime('%Y-%m-%d')
-            else:
-                dico[cle] = valeur
+        dico = { 
+            "id": self.id,
+            "nom": self.nom,
+            "montant": self.montant,
+            "date_de_transaction": self.date_de_transaction.strftime('%Y-%m-%d') 
+                if self.date_de_transaction else None,
+            "categorie": self.categorie,
+            "personne_id": self.personne_id
+        }
         return dico
     
-   
     # personne_id : obligatoire dans le dictionnaire
     @classmethod
     def convertir_du_dico_en_objet(self, dico:dict):
@@ -101,11 +110,11 @@ class Transaction:
             raise ValueError("'personne_id' est obbligatoire dans le dictionnaire")
 
         objet = self(
-            nom = dico.get('_nom'),
-            montant = dico.get('_montant'),
-            date_de_transaction = dico.get('_date_de_transaction'),
-            categorie = dico.get('_categorie'),
-            personne_id = dico.get('personne_id')
+            personne_id = dico.get('personne_id'),
+            nom = dico.get('nom'),
+            montant = dico.get('montant'),
+            date_de_transaction = dico.get('date_de_transaction'),
+            categorie = dico.get('categorie')            
         )
         # objet.id : Récupérer 'id' ou en créer un 'id'
         objet.id = dico.get('id', str(uuid.uuid4()))
